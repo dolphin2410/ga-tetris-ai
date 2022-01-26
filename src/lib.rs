@@ -2,8 +2,7 @@ pub mod tetris;
 
 use wasm_bindgen::prelude::*;
 
-use crate::tetris::Field;
-use crate::tetris::Tetrium;
+use crate::tetris::{field::Field, util::find_best, tetrium::Tetrium};
 
 #[wasm_bindgen]
 pub fn tetris() {
@@ -16,7 +15,7 @@ pub fn tetris() {
     field.matrix[19][2] = 1;
     field.matrix[19][3] = 1;
 
-    let (x, rotation) = crate::tetris::find_best(&field, &Tetrium::TETRIS_L_REVERSE).unwrap();
+    let (x, rotation) = find_best(&field, &Tetrium::TETRIS_L_REVERSE).unwrap();
 
     println!("X: {}, Rotation: {}", x, rotation);
 }
