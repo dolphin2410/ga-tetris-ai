@@ -1,5 +1,7 @@
-#[allow(non_camel_case_types)]
+use wasm_bindgen::prelude::*;
 
+#[allow(non_camel_case_types)]
+#[wasm_bindgen]
 pub enum Tetrium {
     TETRIS_STAIR,
     TETRIS_STAIR_REVERSE,
@@ -11,6 +13,19 @@ pub enum Tetrium {
 }
 
 impl Tetrium {
+    pub fn from_str(name: &str) -> Result<Tetrium, &str> {
+        match name {
+            "TETRIS_STAIR" => Ok(Tetrium::TETRIS_STAIR),
+            "TETRIS_STAIR_REVERSE" => Ok(Tetrium::TETRIS_STAIR_REVERSE),
+            "TETRIS_T" => Ok(Tetrium::TETRIS_T),
+            "TETRIS_L" => Ok(Tetrium::TETRIS_L),
+            "TETRIS_L_REVERSE" => Ok(Tetrium::TETRIS_L_REVERSE),
+            "TETRIS_SQUARE" => Ok(Tetrium::TETRIS_SQUARE),
+            "TETRIS_LINE" => Ok(Tetrium::TETRIS_LINE),
+            _ => Err("No Such Enum")
+        }
+    }
+
     pub fn rotate_bounds(&self, times: u8) -> Vec<Vec<u8>> {
         match self {
             &Tetrium::TETRIS_SQUARE => vec![vec![1, 1], vec![1, 1]],

@@ -1,6 +1,6 @@
 use super::{score::*, field::Field, tetrium::Tetrium};
 
-pub fn find_best(field: &Field, tetrium: &Tetrium) -> Result<(usize, u8), &'static str> {
+pub fn find_best(field: &mut Field, tetrium: &Tetrium) -> Result<(usize, u8), &'static str> {
     let mut max_score = Option::None;
     let mut best = Option::None;
     for rotation in 0..4 {
@@ -9,7 +9,7 @@ pub fn find_best(field: &Field, tetrium: &Tetrium) -> Result<(usize, u8), &'stat
             let score = calculate_score(field, x, &bounds);
             if max_score.is_none() || max_score.unwrap() < score {
                 max_score = Option::Some(score);
-                best = Option::Some((x, rotation))
+                best = Option::Some((x, rotation));
             }
         }
     }
@@ -25,7 +25,11 @@ pub fn collide(field: &Field, bounds: &Vec<Vec<u8>>, init_x: usize, amount: usiz
     let bound_x = bounds[0].len();
     for x in 0..bound_x {
         for y in 0..bound_y {
-            if field.matrix[y + amount][init_x + x] == 1 {
+            if y + amount >= 20 {
+                return true;
+            }
+
+            if field.matrix[y + amount][init_x + x] != 0 {
                 return true;
             }
         }
