@@ -1,38 +1,27 @@
 use super::{score::*, field::Field, tetrium::Tetrium};
 
-pub fn find_best(field: &mut Field, tetrium: &Tetrium) -> Result<(usize, u8), &'static str> {
+pub fn find_best(field: &Field, tetrium: &Tetrium) -> Option<(usize, u8, Field, f32, i32, i32)> {
     let mut max_score = Option::None;
     let mut best = Option::None;
     for rotation in 0..4 {
         let bounds = tetrium.rotate_bounds(rotation);
-        for x in 0..(11 - bounds[0].len()) {
-            let score = calculate_score(field, x, &bounds);
-            if max_score.is_none() || max_score.unwrap() < score {
-                max_score = Option::Some(score);
-                best = Option::Some((x, rotation));
+        for x in 0..(field.matrix[0].len() - bounds[0].len() + 1) {
+            if let Ok((simulated, score, hole, hole_row)) = calculate_score(field, x, &bounds) {
+                if  max_score.is_none() || max_score.unwrap() < score {
+                    max_score = Some(score);
+                    best = Option::Some((x, rotation, simulated, max_score.unwrap(), hole, hole_row));
+                }
             }
         }
     }
-    if !best.is_none() {
-        Ok(best.unwrap())
-    } else {
-        Err("Max Score is Null")
-    }
+    best
 }
 
-pub fn collide(field: &Field, bounds: &Vec<Vec<u8>>, init_x: usize, amount: usize) -> bool {
-    let bound_y = bounds.len();
-    let bound_x = bounds[0].len();
-    for x in 0..bound_x {
-        for y in 0..bound_y {
-            if y + amount >= 20 {
-                return true;
-            }
-
-            if field.matrix[y + amount][init_x + x] != 0 {
-                return true;
-            }
-        }
+pub fn highest_of(values: Vec<i32>) -> usize {
+    let optional_max =  values.iter().max();
+    if let Some(maximum) = optional_max {
+        return maximum.to_owned() as usize;
+    } else {
+        return values[0] as usize;
     }
-    return false;
 }

@@ -1,75 +1,99 @@
-use super::{util::collide, field::Field};
+use super::field::Field;
 
-pub static FILL_WEIGHT: f32 = 0.8;
-pub static WHITESPACE_WEIGHT: f32 = -0.8;
-pub static BUMPINESS_WEIGHT: f32 = -0.8;
-pub static CLEARED_WEIGHT: f32 = 0.55;
+pub static WHITESPACE_WEIGHT: f32 = 0.8208;
+pub static BUMPINESS_WEIGHT: f32 = 0.3924;
+pub static COMPLETED_LINES_MIN: f32 = 0.5500;
+pub static COMPLETED_LINES_MAX: f32 = 0.7806;
+pub static HOLE_ROWS_WEIGHT: f32 = 0.8810;
 
-pub fn calculate_score(field: &mut Field, x: usize, bounds: &Vec<Vec<u8>>) -> f32 {
-    let bound_y = bounds.len();
-    let mut max_y = Option::None;
-
-    for y in 1..(21 - bound_y) {
-        if collide(field, bounds, x, y) {
-            break;
-        } else {
-            max_y = Option::Some(y);
-        }
-    }
-
-    if max_y.is_none() {
-        return 0.0;
-    } else if max_y.unwrap() <= 0 {
-        return 0.0;
-    }
-
-    let whitespace = calculate_whitespace(field, bounds, x, max_y.unwrap());
-    let bottom_fill = calculate_bottom_fill(bounds, max_y.unwrap());
-    let bumpiness = calculate_bumpiness(field, bounds, x, max_y.unwrap());
-    let cleared = field.clear_line() as f32 * CLEARED_WEIGHT;
-
-    return bottom_fill + whitespace + bumpiness + cleared;
+pub fn calculate_cleared_score(cleared: i32, highest: i32, height: i32) -> f32 {
+    let min = COMPLETED_LINES_MIN;
+    let max = COMPLETED_LINES_MAX;
+    let weight = min + ((highest as f32 / height as f32) * (max - min));
+    return cleared as f32 * weight;
 }
 
-pub fn calculate_whitespace(field: &Field, bounds: &Vec<Vec<u8>>, init_x: usize, init_y: usize) -> f32 {
-    let bound_x = bounds[0].len();
+pub fn calculate_score(field: &Field, x: usize, bounds: &Vec<Vec<u8>>) -> Result<(Field, f32, i32, i32), &'static str> {
+    if let Ok(simulated) = field.simulate_application(bounds, x) {
+        let whitespace = calculate_whitespace(&simulated);
+        let bumpiness = calculate_bumpiness_score(&simulated);
+        let cleared = calculate_cleared_lines(&simulated);
+        let hole_rows = rows_with_holes(&simulated);
 
+        let len = simulated.matrix.len();
+        let highest = simulated.highest();
+
+        Ok((simulated, calculate_cleared_score(cleared, highest, len as i32) - (whitespace as f32 * WHITESPACE_WEIGHT) - bumpiness - (hole_rows as f32 * HOLE_ROWS_WEIGHT), whitespace, hole_rows))
+    } else {
+        Err("Simon says, 'sugo'")
+    }
+}
+
+pub fn calculate_cleared_lines(simulated: &Field) -> i32 {
+    let mut filled = 0;
+    for y in simulated.matrix.iter() {
+        if !y.contains(&0) {
+            filled += 1;
+        }
+    }
+    filled
+}
+
+pub fn calculate_whitespace(simulated: &Field) -> i32 {
     let mut whitespace = 0;
-
-    for y in init_y..20 {
-        for x in init_x..(init_x + bound_x) {
-            if field.matrix[y][x] == 0 {
-                whitespace = whitespace + 1
+    for x in 0..simulated.matrix[0].len() {
+        let mut has_block = false;
+        for (y, row) in simulated.matrix.iter().enumerate() {
+            if !row.contains(&0) {
+                continue;
+            }
+            if simulated.matrix[y][x] != 0 {
+                has_block = true; // Found the top block of the column
+            } else {
+                if has_block && simulated.matrix[y][x] == 0 {
+                    // This block is not the top of the column, but is empty
+                    whitespace += 1; // This block is a whitespace
+                }
             }
         }
     }
 
-    whitespace as f32 * WHITESPACE_WEIGHT
+    whitespace
 }
 
-pub fn calculate_bottom_fill(bounds: &Vec<Vec<u8>>, init_y: usize) -> f32 {
-    let bound_y = bounds.len();
-    let bound_x = bounds[0].len();
+pub fn calculate_bumpiness_score(simulated: &Field) -> f32 {
+    let mut bumpiness = 0;
+    let mut prev_height: i32 = -1;
 
-    let mut score = 0.0;
+    for x in 0..simulated.matrix[0].len() {
+        let height: i32 = simulated.highest_at(x);
 
-    for y in 0..bound_y {
-        for x in 0..bound_x {
-            if bounds[y][x] != 0 {
-                score += ((y + init_y) as f32) * FILL_WEIGHT
+        if prev_height != -1 {
+            bumpiness += (height - prev_height).abs();
+        }
+
+        prev_height = height;
+    }
+
+    bumpiness as f32 * BUMPINESS_WEIGHT
+}
+
+pub fn rows_with_holes(simulated: &Field) -> i32 {
+    let mut rows = vec![];
+
+    for x in 0..simulated.matrix[0].len() {
+        let mut has_block = false;
+        for (y, row) in simulated.matrix.iter().enumerate() {
+            if !row.contains(&0) {
+                continue;
+            }
+            if simulated.matrix[y][x] != 0 {
+                has_block = true;
+            }
+            if has_block && simulated.matrix[y][x] == 0 && !rows.contains(&y) {
+                rows.push(y);
             }
         }
     }
-    score
-}
-
-pub fn calculate_bumpiness(field: &Field, bounds: &Vec<Vec<u8>>, init_x: usize, init_y: usize) -> f32 {
-    let application = field.simulate_application(bounds, init_x, init_y);
-    let mut vec = vec![];
-    for i in 0..application.matrix.len() {
-        if application.matrix[i].contains(&1) {
-            vec.push(i as i32);
-        }
-    }
-    (vec.last().unwrap() - vec.first().unwrap()) as f32 * BUMPINESS_WEIGHT
+    return rows.len() as i32;
 }
