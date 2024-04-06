@@ -1,7 +1,8 @@
-use wasm_bindgen::prelude::*;
+use rand::{distributions::{Distribution, Standard}, Rng};
+// use wasm_bindgen::prelude::*;
 
 #[allow(non_camel_case_types)]
-#[wasm_bindgen]
+// #[wasm_bindgen]
 pub enum Tetrium {
     TETRIS_STAIR,
     TETRIS_STAIR_REVERSE,
@@ -12,6 +13,19 @@ pub enum Tetrium {
     TETRIS_LINE
 }
 
+impl Distribution<Tetrium> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Tetrium {
+        match rng.gen_range(0..7) {
+            0 => Tetrium::TETRIS_STAIR,
+            1 => Tetrium::TETRIS_STAIR_REVERSE,
+            2 => Tetrium::TETRIS_T,
+            3 => Tetrium::TETRIS_L,
+            4 => Tetrium::TETRIS_L_REVERSE,
+            5 => Tetrium::TETRIS_SQUARE,
+            _ => Tetrium::TETRIS_LINE,
+        }
+    }
+}
 impl Tetrium {
     pub fn from_str(name: &str) -> Result<Tetrium, &str> {
         match name {
