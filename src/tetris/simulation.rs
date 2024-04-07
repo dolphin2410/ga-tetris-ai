@@ -10,7 +10,7 @@ pub struct MovementData {
 }
 
 pub fn find_best_move(field: &Field, tetrium: &Tetrium, key: &KeyData) -> Option<MovementData> {
-    let mut max_score = 0.0;
+    let mut max_score = -1000.0;
     let mut best = Option::None;
 
     for rotation in 0..4 {
@@ -18,6 +18,7 @@ pub fn find_best_move(field: &Field, tetrium: &Tetrium, key: &KeyData) -> Option
 
         for x in 0..(field.matrix[0].len() - tetrium_bounds[0].len() + 1) {
             if let Ok(sim_res) = calculate_score(field, x, &tetrium_bounds, key) {
+
                 if  max_score < sim_res.score {
                     max_score = sim_res.score;
 

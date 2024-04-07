@@ -94,7 +94,7 @@ impl Field {
     }
 
     pub fn debug(&self) {
-        println!("--start---");
+        log::info!("--start---");
         for row in self.matrix.iter() {
             for column in row {
                 let to_print = if *column == 1 {
@@ -104,9 +104,9 @@ impl Field {
                 };
                 print!("{}", to_print);
             }
-            println!("")
+            log::info!("")
         }
-        println!("---end----");
+        log::info!("---end----");
     }
 
     pub fn debug_console(&self) {

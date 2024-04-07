@@ -31,8 +31,13 @@ pub fn tetris_internal(matrix: Vec<Vec<u8>>, tetris: &Tetrium) -> (String, Field
 }
 
 #[cfg(test)]
-mod tests {
-    use crate::{ga::model::{train, visual_simulation, KeyData}, KEY};
+mod ga_tests {
+    use std::fs::File;
+
+    use log::LevelFilter;
+    use simplelog::{Config, WriteLogger};
+
+    use crate::{ga::model::{get_timestamp, train, visual_simulation, KeyData}, KEY};
 
     #[test]
     fn simulate_tetris_game() {
@@ -41,6 +46,9 @@ mod tests {
 
     #[test]
     fn train_ga_agent() {
+        let log_file = File::create(format!("logs/ga-tetris-ai-train-agent-{}.log", get_timestamp())).unwrap();
+        WriteLogger::init(LevelFilter::Info, Config::default(), log_file).unwrap();
+        
         train(vec![
             KeyData { whitespace_weight: 0.8208, bumpiness_weight: 0.3924, completed_lines_min: 0.5500, completed_lines_max: 0.7806, hole_rows_weight: 0.8810 },
             KeyData { whitespace_weight: 0.12526667, bumpiness_weight: 0.18833774, completed_lines_min: 0.13196576, completed_lines_max: 0.90341705, hole_rows_weight: 0.83196425 },

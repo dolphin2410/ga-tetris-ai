@@ -46,7 +46,6 @@ pub fn fitness_single(keys: &KeyData) -> u32 {
     let mut field = Field { matrix: vec![vec![0; 10]; 20] };
 
     let mut score = 0;
-
     loop {
         let tetris: Tetrium = rng.gen();
 
@@ -170,24 +169,30 @@ pub fn replace(new_gen: Vec<(u32, KeyData)>, old_gen: &mut Vec<(u32, KeyData)>) 
     }
 }
 
-pub fn print_timestamp(header: &str) {
+pub fn get_timestamp() -> u64 {
     let start = SystemTime::now();
     let since_the_epoch = start
         .duration_since(UNIX_EPOCH).expect("Time went backwards");
 
-    println!("{}: Timestamp: {:?}", header, since_the_epoch);
+    return since_the_epoch.as_secs()
+}
+
+pub fn print_timestamp(header: &str) {
+    let since_the_epoch = get_timestamp();
+
+    log::info!("{}: Timestamp: {}", header, since_the_epoch);
 }
 
 pub fn train(intial_population: Vec<KeyData>) {
     let mut rng = rand::thread_rng();
     let mut population = vec![];
 
-    println!("Training Started");
+    log::info!("Training Started\n\n");
 
     for key in intial_population.iter() {
         let new_key = key.clone();
         let fitness = fitness(&new_key);
-        println!("Current Fitness: {}", fitness);
+        log::info!("Current Fitness: {}", fitness);
         population.push((fitness, new_key));
     }
 
@@ -205,7 +210,7 @@ pub fn train(intial_population: Vec<KeyData>) {
         population.push((fitness(&keys), keys))
     }
 
-    println!("Population Generated");
+    log::info!("Population Generated");
 
     for _ in 0..100 {
         print_timestamp("proc_enter");
@@ -213,7 +218,7 @@ pub fn train(intial_population: Vec<KeyData>) {
         sort(&mut population);
 
         // Find the superior gene of current step
-        println!("Current Superior: {:?}", population[0].1.clone());
+        log::info!("Current Superior: {:?}", population[0].1.clone());
         
         // The ones adapted to the environment
         let selected = population[0..GIFTED_POPULATION].to_vec();
@@ -231,5 +236,5 @@ pub fn train(intial_population: Vec<KeyData>) {
     // Finalize the step
     sort(&mut population);
 
-    println!("{:?}", population[0].1.clone());
+    log::info!("{:?}", population[0].1.clone());
 }
