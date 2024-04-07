@@ -1,14 +1,8 @@
-// pub static WHITESPACE_WEIGHT: f32 = 0.8208;
-// pub static BUMPINESS_WEIGHT: f32 = 0.3924;
-// pub static COMPLETED_LINES_MIN: f32 = 0.5500;
-// pub static COMPLETED_LINES_MAX: f32 = 0.7806;
-// pub static HOLE_ROWS_WEIGHT: f32 = 0.8810;
-
 use std::{thread, time::{Duration, SystemTime, UNIX_EPOCH}};
 
 use rand::Rng;
 
-use crate::tetris::{field::Field, tetrium::Tetrium, util::find_best_w_key};
+use crate::tetris::{field::Field, simulation::{find_best_move, MovementData}, tetrium::Tetrium};
 use rand::seq::SliceRandom;
 
 #[derive(Clone, Copy, Debug)]
@@ -27,24 +21,19 @@ pub static GIFTED_POPULATION: usize = 50;
 // 돌연변이 빈도
 pub static MUT_RATE: f32 = 0.1;
 
-pub fn simulation(keys: &KeyData) {
+pub fn visual_simulation(keys: &KeyData) {
     let mut rng = rand::thread_rng();
 
     let mut field = Field { matrix: vec![vec![0; 10]; 20] };
 
-    let mut idx = 0;
-
     loop {
         let tetris: Tetrium = rng.gen();
 
-        if let Some((_, _, sim, _, _, _)) = find_best_w_key(&field, &tetris, keys) {
-            field = sim;
+        if let Some(MovementData { sim_res, .. }) = find_best_move(&field, &tetris, keys) {
+            field = sim_res.simulated_field;
             field.clear_line(&vec![0; 10]);
-            // println!("{}", score);
-            // field.debug();
-            println!("{}", idx);
-            // thread::sleep(Duration::from_millis(300));
-            idx += 1;
+            field.debug();
+            thread::sleep(Duration::from_millis(300));
         } else {
             break;
         }
@@ -58,26 +47,17 @@ pub fn fitness_single(keys: &KeyData) -> u32 {
 
     let mut score = 0;
 
-    // let mut idx = 0;
-
     loop {
         let tetris: Tetrium = rng.gen();
 
-        if let Some((_, _, sim, _, _, _)) = find_best_w_key(&field, &tetris, keys) {
+        if let Some(MovementData { sim_res, .. }) = find_best_move(&field, &tetris, keys) {
 
-            field = sim;
-            // thread::sleep(Duration::from_secs(2));
+            field = sim_res.simulated_field;
             score += field.clear_line(&vec![0; 10]);
-            // println!("{}", score);
-            // field.debug();
-            // println!("{}", idx);
-            // idx += 1;
         } else {
             break;
         }
     }
-
-    // return score + field.clear_line(&vec![0; 10])
 
     return score;
 }

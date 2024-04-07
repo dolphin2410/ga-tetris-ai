@@ -1,4 +1,4 @@
-// use crate::console_log;
+use crate::console_log;
 
 use super::tetrium::Tetrium;
 
@@ -110,7 +110,7 @@ impl Field {
     }
 
     pub fn debug_console(&self) {
-        // console_log!("--start--");
+        console_log!("--start--");
         let mut string = String::new();
         for row in self.matrix.iter() {
             for column in row {
@@ -118,8 +118,8 @@ impl Field {
             }
             string.push('\n');
         }
-        // console_log!("{}", string);
-        // console_log!("---end---");
+        console_log!("{}", string);
+        console_log!("---end---");
     }
 
     pub fn clone(&self) -> Field {

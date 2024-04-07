@@ -1,8 +1,8 @@
 use rand::{distributions::{Distribution, Standard}, Rng};
-// use wasm_bindgen::prelude::*;
+use wasm_bindgen::prelude::*;
 
 #[allow(non_camel_case_types)]
-// #[wasm_bindgen]
+#[wasm_bindgen]
 pub enum Tetrium {
     TETRIS_STAIR,
     TETRIS_STAIR_REVERSE,
